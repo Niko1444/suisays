@@ -1,0 +1,377 @@
+/* SuiSays Extension - Native Twitter Styles */
+
+.suisays-ui {
+  margin-top: 12px;
+  width: 100%;
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.suisays-container {
+  background: #f7fefa;
+  border: 1px solid #8fe9b4;
+  border-radius: 16px;
+  padding: 16px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+    Arial, sans-serif;
+  position: relative;
+  overflow: hidden;
+}
+
+.suisays-container::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #8fe9b4 0%, #333333 100%);
+}
+
+.suisays-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.suisays-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 14px;
+  color: #333333;
+}
+
+.suisays-logo::before {
+  content: "🔗";
+  font-size: 16px;
+}
+
+.suisays-status {
+  font-size: 12px;
+  color: #0d0d0d;
+  background: rgba(143, 233, 180, 0.2);
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+.suisays-voting-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.suisays-vote-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.suisays-vote-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border: 1.5px solid #8fe9b4;
+  border-radius: 12px;
+  background: white;
+  color: #333333;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.suisays-vote-btn:hover {
+  background: #f7fefa;
+  border-color: #333333;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(143, 233, 180, 0.2);
+}
+
+.suisays-vote-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(143, 233, 180, 0.2);
+}
+
+.suisays-vote-btn.agree {
+  color: #0d0d0d;
+}
+
+.suisays-vote-btn.agree:hover {
+  background: #8fe9b4;
+  color: white;
+  border-color: #8fe9b4;
+}
+
+.suisays-vote-btn.disagree {
+  color: #333333;
+}
+
+.suisays-vote-btn.disagree:hover {
+  background: #333333;
+  color: white;
+  border-color: #333333;
+}
+
+.suisays-vote-btn.active {
+  background: #8fe9b4;
+  border-color: #8fe9b4;
+  color: white;
+  box-shadow: 0 0 0 2px rgba(143, 233, 180, 0.3);
+}
+
+.suisays-vote-btn.active.disagree {
+  background: #333333;
+  border-color: #333333;
+}
+
+.suisays-vote-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.suisays-donation-section {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  background: rgba(143, 233, 180, 0.1);
+  border-radius: 12px;
+  border: 1px solid rgba(143, 233, 180, 0.3);
+}
+
+.suisays-donation-input {
+  flex: 1;
+  min-width: 80px;
+  padding: 8px 12px;
+  border: 1px solid #8fe9b4;
+  border-radius: 8px;
+  background: white;
+  color: #333333;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.suisays-donation-input:focus {
+  outline: none;
+  border-color: #333333;
+  box-shadow: 0 0 0 2px rgba(143, 233, 180, 0.2);
+}
+
+.suisays-donation-input::placeholder {
+  color: #999;
+}
+
+.suisays-donate-btn {
+  padding: 8px 16px;
+  background: #8fe9b4;
+  border: 1px solid #8fe9b4;
+  border-radius: 8px;
+  color: #0d0d0d;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.suisays-donate-btn:hover {
+  background: #333333;
+  border-color: #333333;
+  color: white;
+  transform: translateY(-1px);
+}
+
+.suisays-donate-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.suisays-total-donations {
+  font-size: 12px;
+  color: #333333;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.suisays-wallet-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: rgba(13, 13, 13, 0.05);
+  border-radius: 8px;
+  margin-top: 8px;
+}
+
+.suisays-wallet-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #333333;
+}
+
+.suisays-wallet-address {
+  font-family: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas,
+    "Courier New", monospace;
+  background: rgba(143, 233, 180, 0.2);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.suisays-connect-btn {
+  padding: 6px 12px;
+  background: #8fe9b4;
+  border: 1px solid #8fe9b4;
+  border-radius: 6px;
+  color: #0d0d0d;
+  font-weight: 600;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.suisays-connect-btn:hover {
+  background: #333333;
+  border-color: #333333;
+  color: white;
+}
+
+.suisays-status-message {
+  margin-top: 8px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.suisays-status-message.loading {
+  background: rgba(143, 233, 180, 0.2);
+  color: #333333;
+  border: 1px solid rgba(143, 233, 180, 0.4);
+}
+
+.suisays-status-message.success {
+  background: #8fe9b4;
+  color: #0d0d0d;
+  border: 1px solid #8fe9b4;
+}
+
+.suisays-status-message.error {
+  background: #fcfbf5;
+  color: #333333;
+  border: 1px solid #333333;
+}
+
+.suisays-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(143, 233, 180, 0.3);
+}
+
+.suisays-stats {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 12px;
+  color: #333333;
+}
+
+.suisays-stat {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.suisays-link {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #333333;
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.suisays-link:hover {
+  color: #8fe9b4;
+}
+
+/* Loading animation */
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+.suisays-status-message.loading {
+  animation: pulse 2s infinite;
+}
+
+.suisays-status-message.loading::after {
+  content: "...";
+  animation: dots 1.5s infinite;
+}
+
+@keyframes dots {
+  0%,
+  20% {
+    content: ".";
+  }
+  40% {
+    content: "..";
+  }
+  60%,
+  100% {
+    content: "...";
+  }
+}
+
+/* Responsive design for smaller screens */
+@media (max-width: 500px) {
+  .suisays-vote-buttons {
+    flex-direction: column;
+  }
+
+  .suisays-donation-section {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .suisays-footer {
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-start;
+  }
+}

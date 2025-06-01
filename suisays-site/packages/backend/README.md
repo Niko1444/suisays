@@ -1,9 +1,3 @@
-# Sui dApp Starter: Backend
+# Created Registry: 0x764bca54e9ba4716d9e37240c1c9752049f495b467a8aed735dc804660cf7110
 
-Please find the root project [README](../../README.md).
-
-# Created Post #1, #2
-
-# Created Registry: 0x4106347a849e122f04a06325f402aaed073be4c7661560da15ebd9384f7998a6
-
-# Created Contract: 0x3584d58810a7ff6d699f879a064fdd8711effe012907a990aa2a5491596df4e7
+# Created Contract: 0x739560bd473f92a22353c4bbb1a5e2b0112c80e30cc8bdc25f26f363688c0278

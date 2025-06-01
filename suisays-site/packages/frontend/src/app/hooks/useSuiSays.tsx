@@ -57,30 +57,35 @@ export const useSuiSays = () => {
   // Load posts from the blockchain
   const loadPosts = useCallback(
     async (type: 'recent' | 'trending' = 'recent') => {
+      console.log('🚀 loadPosts called with type:', type)
       setLoading(true)
       setError(null)
 
       try {
-        let postIds: string[] = []
+        // Generate post IDs from 1 to 20
+        console.log('📍 Generating post IDs 1-20...')
+        const postIds = Array.from({ length: 20 }, (_, i) => (i + 1).toString())
+        console.log('✅ Generated post IDs:', postIds)
 
-        if (type === 'recent') {
-          postIds = await SuiSaysContract.getRecentPosts(10)
+        // Use the batch getPosts function to fetch all posts
+        if (postIds.length > 0) {
+          console.log('📍 Fetching posts data using batch function...')
+          const suiPosts = await SuiSaysContract.getPosts(postIds)
+          console.log('✅ Got sui posts:', suiPosts.length)
+
+          const postsData = suiPosts.map(convertSuiPostToPost)
+          console.log('✅ Converted to UI posts:', postsData.length)
+
+          // Sort by ID (descending for newest first)
+          postsData.sort((a, b) => parseInt(b.id) - parseInt(a.id))
+
+          setPosts(postsData)
         } else {
-          postIds = await SuiSaysContract.getMostVotedPosts(10)
+          console.log('⚠️ No post IDs generated')
+          setPosts([])
         }
-
-        // Fetch full post data for each ID
-        const postsData: Post[] = []
-        for (const postId of postIds) {
-          const suiPost = await SuiSaysContract.getPost(postId)
-          if (suiPost) {
-            postsData.push(convertSuiPostToPost(suiPost))
-          }
-        }
-
-        setPosts(postsData)
       } catch (err) {
-        console.error('Error loading posts:', err)
+        console.error('❌ Error loading posts:', err)
         setError('Failed to load posts')
       } finally {
         setLoading(false)

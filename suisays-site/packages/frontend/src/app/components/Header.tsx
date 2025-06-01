@@ -24,7 +24,9 @@ export const Header = ({
       {/* Greeting */}
       <div className="mb-4 flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-gray-900">suisays welcome~</h1>
+          <h1 className="text-md pr-24 font-bold text-gray-900">
+            suisays welcome~
+          </h1>
           <p className="text-base text-[#6EE7B7]">
             {isConnected && userAddress
               ? `@${userAddress.slice(0, 6)}...${userAddress.slice(-4)}`

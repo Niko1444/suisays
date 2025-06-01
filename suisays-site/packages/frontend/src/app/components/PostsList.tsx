@@ -1,25 +1,12 @@
+// components/PostsList.tsx
 'use client'
 
 import React from 'react'
 import { PostCard } from './PostCard'
-
-interface Post {
-  id: string
-  content: string
-  author: string
-  authorName: string
-  agreeCount: number
-  disagreeCount: number
-  totalDonations: number
-  createdAt: number
-  commentCount: number
-  timeToReveal: string
-  isRevealed: boolean
-  revealDate?: string
-}
+import { SuiPost } from '../lib/suiClient'
 
 interface PostsListProps {
-  posts: Post[]
+  posts: SuiPost[]
   onVote: (postId: string, voteType: 'agree' | 'disagree') => void
   onComment: (postId: string) => void
   onDonate: (postId: string) => void
@@ -31,11 +18,40 @@ export const PostsList = ({
   onComment,
   onDonate,
 }: PostsListProps) => {
+  // Filter out posts from the zero address
+  const filteredPosts = posts.filter((post) => {
+    if (
+      post?.author ===
+      '0x0000000000000000000000000000000000000000000000000000000000000000'
+    ) {
+      console.log('Filtered out post from zero address:', post.id)
+      return false
+    }
+    return true
+  })
+
+  console.log(
+    `Filtered posts: ${posts.length} → ${filteredPosts.length} posts (removed zero address posts)`
+  )
+
+  if (filteredPosts.length === 0) {
+    return (
+      <div className="space-y-4">
+        <div className="rounded-2xl border border-gray-200 bg-gray-50 p-8 text-center">
+          <p className="text-gray-600">No posts available.</p>
+          <p className="mt-2 text-sm text-gray-500">
+            Be the first to create a post!
+          </p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-4">
-      {posts.map((post) => (
+      {filteredPosts.map((post, index) => (
         <PostCard
-          key={post.id}
+          key={`post-${index}-${post?.id || 'unknown'}`}
           post={post}
           onVote={onVote}
           onComment={onComment}

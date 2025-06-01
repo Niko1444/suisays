@@ -48,17 +48,11 @@ export const CreatePostCard = ({
       </div>
 
       <div className="space-y-4">
-        <input
-          type="text"
-          placeholder="Question title"
-          className="w-full rounded-lg border border-gray-200 p-3 text-base focus:outline-none focus:ring-2 focus:ring-[#6EE7B7]"
-          disabled={disabled}
-        />
         <textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
           placeholder="Write your question here..."
-          className="h-24 w-full resize-none rounded-lg border border-gray-200 p-3 text-base focus:outline-none focus:ring-2 focus:ring-[#6EE7B7]"
+          className="h-24 w-full resize-none rounded-lg border border-gray-200 bg-white p-3 text-black focus:outline-none focus:ring-2 focus:ring-[#6EE7B7]"
           disabled={disabled}
         />
         <div className="flex items-center justify-between">

@@ -1,6 +1,6 @@
 // hooks/useSuiSays.ts
 import { useState, useEffect, useCallback } from 'react'
-import { SuiSaysContract, SuiPost, formatSUI } from '../lib/suiClient'
+import { SuiSaysContract, SuiPost } from '../lib/suiClient'
 import {
   useCurrentAccount,
   useSignAndExecuteTransaction,
@@ -16,9 +16,6 @@ export interface Post {
   totalDonations: number
   createdAt: number
   commentCount: number
-  timeToReveal: string
-  isRevealed: boolean
-  revealDate?: string
 }
 
 export const useSuiSays = () => {
@@ -54,8 +51,6 @@ export const useSuiSays = () => {
       totalDonations: suiPost.total_donations,
       createdAt: suiPost.created_at,
       commentCount: 0, // TODO: Fetch comment count
-      timeToReveal: '15:03:12', // Mock reveal time
-      isRevealed: false,
     }
   }
 

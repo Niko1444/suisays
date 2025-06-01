@@ -4,7 +4,6 @@ class SuiBlinksExtension {
     this.voteData = new Map();
     this.isWalletConnected = false;
     this.walletAddress = null;
-
     this.init();
   }
 
@@ -122,7 +121,7 @@ class SuiBlinksExtension {
       this.addBlinkUI(tweetElement, tweetId, tweetText);
       this.processedTweets.add(tweetId);
 
-      console.log(`📊 Processed Sui Blink: ${tweetId}`);
+      console.log(`📊 Processed SuiSays: ${tweetId}`);
     } catch (error) {
       console.error("Error processing tweet:", error);
     }
@@ -133,6 +132,7 @@ class SuiBlinksExtension {
       /#SuiBlink\b/i,
       /#SuiInsight\b/i,
       /#SuiPoll\b/i,
+      /#SuiSays\b/i,
       /🔗.*sui/i,
     ];
 
@@ -233,8 +233,7 @@ class SuiBlinksExtension {
     return `
         <div class="suisays-container">
           <div class="suisays-header">
-            <div class="suisays-logo">SuiSays Voting</div>
-            <div class="suisays-status">Live on Sui</div>
+            <div class="suisays-logo">SuiSays Insight</div>
           </div>
           
           <div class="suisays-voting-section">
@@ -278,10 +277,6 @@ class SuiBlinksExtension {
               <div class="suisays-stat">
                 <span>👥</span>
                 <span>${voteData.agree + voteData.disagree} votes</span>
-              </div>
-              <div class="suisays-stat">
-                <span>⚡</span>
-                <span>Powered by Sui</span>
               </div>
             </div>
             <a href="https://suisays.com/post/${tweetId}" target="_blank" class="suisays-link">

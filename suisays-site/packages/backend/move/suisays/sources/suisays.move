@@ -16,6 +16,7 @@ module suisays::suisays {
     public struct SuiSaysRegistry has key, store {
         id: UID,
         posts: Table<String, SuiSaysPost>,
+        post_ids: vector<String>,
         post_count: u64,
     }
 
@@ -29,6 +30,7 @@ module suisays::suisays {
         voters: Table<address, u8>,
         comment_count: u64,
         comments: Table<String, SuiSaysComment>,
+        comments_ids: vector<String>, 
     }
 
     public struct SuiSaysComment has store {
@@ -45,6 +47,7 @@ module suisays::suisays {
         let registry = SuiSaysRegistry {
             id: object::new(ctx),
             posts: table::new(ctx),
+            post_ids: vector::empty<String>(),
             post_count: 0,
         };
         transfer::share_object(registry);
@@ -91,9 +94,11 @@ module suisays::suisays {
             voters: table::new(ctx),
             comment_count: 0,
             comments: table::new(ctx),
+            comments_ids: vector::empty<String>(),
         };
         
         table::add(&mut registry.posts, post_id, post);
+        vector::push_back(&mut registry.post_ids, post_id);
     }
 
     public entry fun add_comment(
@@ -121,6 +126,7 @@ module suisays::suisays {
         };
         
         table::add(&mut post.comments, comment_id, comment);
+        vector::push_back(&mut post.comments_ids, comment_id);
     }
 
     public entry fun back_comment(
@@ -307,5 +313,15 @@ module suisays::suisays {
     // Get total post count
     public fun get_post_count(registry: &SuiSaysRegistry): u64 {
         registry.post_count
+    }
+
+    public fun get_post_ids(registry: &SuiSaysRegistry): &vector<String> {
+        &registry.post_ids
+    }
+
+    public fun get_comment_ids(registry: &SuiSaysRegistry, post_id: String): &vector<String> {
+        assert!(table::contains(&registry.posts, post_id), EPostNotFound);
+        let post = table::borrow(&registry.posts, post_id);
+        &post.comments_ids
     }
 }

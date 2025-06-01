@@ -7,8 +7,8 @@ import { TabNavigation } from './components/TabNavigation'
 import { CreatePostCard } from './components/CreatePostCard'
 import { PostsList } from './components/PostsList'
 import { BottomNavigation } from './components/BottomNavigation'
-import { WalletConnector } from '/components/WalletConnector'
-import { useSuiSays } from './hooks/useSuisays'
+import { WalletConnector } from './components/WalletConnector'
+import { useSuiSays } from './hooks/useSuiSays'
 
 export default function SuisaysApp() {
   const [activeTab, setActiveTab] = useState('trending')

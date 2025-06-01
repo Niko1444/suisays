@@ -9,7 +9,4 @@ export interface Post {
   totalDonations: number
   createdAt: number
   commentCount: number
-  timeToReveal: string
-  isRevealed: boolean
-  revealDate?: string
 }

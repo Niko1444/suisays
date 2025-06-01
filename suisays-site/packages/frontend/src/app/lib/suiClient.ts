@@ -4,13 +4,13 @@ import { Transaction } from '@mysten/sui/transactions'
 
 // Contract constants
 export const PACKAGE_ID =
-  '0x3584d58810a7ff6d699f879a064fdd8711effe012907a990aa2a5491596df4e7'
+  '0x739560bd473f92a22353c4bbb1a5e2b0112c80e30cc8bdc25f26f363688c0278'
 export const REGISTRY_ID =
-  '0x4106347a849e122f04a06325f402aaed073be4c7661560da15ebd9384f7998a6'
+  '0x764bca54e9ba4716d9e37240c1c9752049f495b467a8aed735dc804660cf7110'
 
 // Initialize Sui client
 export const suiClient = new SuiClient({
-  url: getFullnodeUrl('testnet'), // Change to 'mainnet' for production
+  url: 'https://fullnode.testnet.sui.io:443',
 })
 
 // Types
@@ -36,6 +36,28 @@ export interface SuiComment {
 // Helper function to format SUI amount
 export const formatSUI = (mist: number): string => {
   return (mist / 1_000_000_000).toFixed(3)
+}
+
+// Helper function to format timestamp
+export const formatTimestamp = (timestamp: number): string => {
+  return new Date(timestamp).toLocaleString()
+}
+
+// Helper function to get relative time
+export const getRelativeTime = (timestamp: number): string => {
+  const now = Date.now()
+  const diff = now - timestamp
+
+  const minutes = Math.floor(diff / (1000 * 60))
+  const hours = Math.floor(diff / (1000 * 60 * 60))
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24))
+
+  if (minutes < 1) return 'just now'
+  if (minutes < 60) return `${minutes}m ago`
+  if (hours < 24) return `${hours}h ago`
+  if (days < 7) return `${days}d ago`
+
+  return new Date(timestamp).toLocaleDateString()
 }
 
 // Smart contract interaction functions
@@ -118,12 +140,48 @@ export class SuiSaysContract {
     return tx
   }
 
-  // Get a single post by calling the public view function
+  // Get all post IDs
+  static async getAllPostIds(): Promise<string[]> {
+    try {
+      const tx = new Transaction()
+      tx.moveCall({
+        target: `${PACKAGE_ID}::suisays::get_post_ids`,
+        arguments: [tx.object(REGISTRY_ID)],
+      })
+
+      const result = await suiClient.devInspectTransactionBlock({
+        sender:
+          '0x0000000000000000000000000000000000000000000000000000000000000000',
+        transactionBlock: tx,
+      })
+
+      if (result.results?.[0]?.returnValues?.[0]) {
+        const returnValue = result.results[0].returnValues[0]
+        // The return value should be a vector of strings
+        // Parse the BCS encoded data
+        const [data] = returnValue
+        if (Array.isArray(data)) {
+          return data.map((item: any) => {
+            if (typeof item === 'string') return item
+            if (Array.isArray(item)) {
+              // Handle byte array to string conversion
+              return new TextDecoder().decode(new Uint8Array(item))
+            }
+            return String(item)
+          })
+        }
+      }
+      return []
+    } catch (error) {
+      console.error('Error fetching post IDs:', error)
+      return []
+    }
+  }
+
+  // Get a single post using the smart contract function
   static async getPost(postId: string): Promise<SuiPost | null> {
     try {
-      // Try using devInspectTransactionBlock directly
       const tx = new Transaction()
-
       tx.moveCall({
         target: `${PACKAGE_ID}::suisays::get_post`,
         arguments: [tx.object(REGISTRY_ID), tx.pure.string(postId)],
@@ -136,23 +194,68 @@ export class SuiSaysContract {
       })
 
       if (result.results?.[0]?.returnValues) {
-        const [
-          content,
-          author,
-          agreeCount,
-          disagreeCount,
-          totalDonations,
-          createdAt,
-        ] = result.results[0].returnValues
+        const returnValues = result.results[0].returnValues
 
-        return {
-          id: postId,
-          content: new TextDecoder().decode(new Uint8Array(content[0])),
-          author: `0x${author[0]}`,
-          agree_count: agreeCount[0][0],
-          disagree_count: disagreeCount[0][0],
-          total_donations: totalDonations[0][0],
-          created_at: createdAt[0][0],
+        // The get_post function returns: (String, address, u64, u64, u64, u64)
+        // Which corresponds to: (content, author, agree_count, disagree_count, total_donations, created_at)
+
+        if (returnValues.length >= 6) {
+          const [
+            contentData,
+            authorData,
+            agreeCountData,
+            disagreeCountData,
+            donationsData,
+            createdAtData,
+          ] = returnValues
+
+          // Parse content (String)
+          let content = ''
+          if (contentData && contentData[0]) {
+            if (typeof contentData[0] === 'string') {
+              content = contentData[0]
+            } else if (Array.isArray(contentData[0])) {
+              content = new TextDecoder().decode(new Uint8Array(contentData[0]))
+            }
+          }
+
+          // Parse author (address)
+          let author = '0x0'
+          if (authorData && authorData[0]) {
+            if (typeof authorData[0] === 'string') {
+              author = authorData[0]
+            } else if (Array.isArray(authorData[0])) {
+              // Convert byte array to hex string
+              const bytes = new Uint8Array(authorData[0])
+              author =
+                '0x' +
+                Array.from(bytes)
+                  .map((b) => b.toString(16).padStart(2, '0'))
+                  .join('')
+            }
+          }
+
+          // Check if post exists (empty content means post doesn't exist)
+          if (!content || content === '') {
+            return null
+          }
+
+          // Parse timestamp
+          const createdAt = createdAtData?.[0]
+            ? Number(createdAtData[0])
+            : Date.now()
+
+          return {
+            id: postId,
+            content,
+            author,
+            created_at: createdAt,
+            agree_count: agreeCountData?.[0] ? Number(agreeCountData[0]) : 0,
+            disagree_count: disagreeCountData?.[0]
+              ? Number(disagreeCountData[0])
+              : 0,
+            total_donations: donationsData?.[0] ? Number(donationsData[0]) : 0,
+          }
         }
       }
 
@@ -161,6 +264,25 @@ export class SuiSaysContract {
       console.error('Error fetching post:', error)
       return null
     }
+  }
+
+  // Get multiple posts efficiently
+  static async getPosts(postIds: string[]): Promise<SuiPost[]> {
+    const posts: SuiPost[] = []
+
+    // Process posts in batches to avoid overwhelming the network
+    const batchSize = 5
+    for (let i = 0; i < postIds.length; i += batchSize) {
+      const batch = postIds.slice(i, i + batchSize)
+      const batchPromises = batch.map((id) => this.getPost(id))
+      const batchResults = await Promise.all(batchPromises)
+
+      batchResults.forEach((post) => {
+        if (post) posts.push(post)
+      })
+    }
+
+    return posts
   }
 
   // Get recent posts by calling the public view function
@@ -179,12 +301,17 @@ export class SuiSaysContract {
         transactionBlock: tx,
       })
 
-      if (result.results?.[0]?.returnValues) {
-        const returnValue = result.results[0].returnValues[0]
-        if (Array.isArray(returnValue)) {
-          return returnValue.map((item) => String(item))
+      if (result.results?.[0]?.returnValues?.[0]) {
+        const [data] = result.results[0].returnValues[0]
+        if (Array.isArray(data)) {
+          return data.map((item: any) => {
+            if (typeof item === 'string') return item
+            if (Array.isArray(item)) {
+              return new TextDecoder().decode(new Uint8Array(item))
+            }
+            return String(item)
+          })
         }
-        return []
       }
 
       return []
@@ -210,12 +337,17 @@ export class SuiSaysContract {
         transactionBlock: tx,
       })
 
-      if (result.results?.[0]?.returnValues) {
-        const returnValue = result.results[0].returnValues[0]
-        if (Array.isArray(returnValue)) {
-          return returnValue.map((item) => String(item))
+      if (result.results?.[0]?.returnValues?.[0]) {
+        const [data] = result.results[0].returnValues[0]
+        if (Array.isArray(data)) {
+          return data.map((item: any) => {
+            if (typeof item === 'string') return item
+            if (Array.isArray(item)) {
+              return new TextDecoder().decode(new Uint8Array(item))
+            }
+            return String(item)
+          })
         }
-        return []
       }
 
       return []
@@ -241,8 +373,8 @@ export class SuiSaysContract {
         transactionBlock: tx,
       })
 
-      if (result.results?.[0]?.returnValues) {
-        return result.results[0].returnValues[0][0][0]
+      if (result.results?.[0]?.returnValues?.[0]) {
+        return Number(result.results[0].returnValues[0][0])
       }
 
       return 0
@@ -275,12 +407,17 @@ export class SuiSaysContract {
         transactionBlock: tx,
       })
 
-      if (result.results?.[0]?.returnValues) {
-        const returnValue = result.results[0].returnValues[0]
-        if (Array.isArray(returnValue) && Array.isArray(returnValue[0])) {
-          return returnValue[0].map((item: any) => String(item))
+      if (result.results?.[0]?.returnValues?.[0]) {
+        const [data] = result.results[0].returnValues[0]
+        if (Array.isArray(data)) {
+          return data.map((item: any) => {
+            if (typeof item === 'string') return item
+            if (Array.isArray(item)) {
+              return new TextDecoder().decode(new Uint8Array(item))
+            }
+            return String(item)
+          })
         }
-        return []
       }
 
       return []
@@ -314,16 +451,59 @@ export class SuiSaysContract {
       })
 
       if (result.results?.[0]?.returnValues) {
-        const [content, author, createdAt, voteSide, backCount] =
-          result.results[0].returnValues
+        const returnValues = result.results[0].returnValues
 
-        return {
-          id: commentId,
-          content: new TextDecoder().decode(new Uint8Array(content[0])),
-          author: `0x${author[0]}`,
-          created_at: createdAt[0][0],
-          vote_side: voteSide[0][0],
-          back_count: backCount[0][0],
+        if (returnValues.length >= 5) {
+          const [
+            contentData,
+            authorData,
+            createdAtData,
+            voteSideData,
+            backCountData,
+          ] = returnValues
+
+          // Parse content
+          let content = ''
+          if (contentData?.[0]) {
+            if (typeof contentData[0] === 'string') {
+              content = contentData[0]
+            } else if (Array.isArray(contentData[0])) {
+              content = new TextDecoder().decode(new Uint8Array(contentData[0]))
+            }
+          }
+
+          // Parse author
+          let author = '0x0'
+          if (authorData?.[0]) {
+            if (typeof authorData[0] === 'string') {
+              author = authorData[0]
+            } else if (Array.isArray(authorData[0])) {
+              const bytes = new Uint8Array(authorData[0])
+              author =
+                '0x' +
+                Array.from(bytes)
+                  .map((b) => b.toString(16).padStart(2, '0'))
+                  .join('')
+            }
+          }
+
+          if (!content || content === '') {
+            return null
+          }
+
+          // Parse timestamp
+          const createdAt = createdAtData?.[0]
+            ? Number(createdAtData[0])
+            : Date.now()
+
+          return {
+            id: commentId,
+            content,
+            author,
+            created_at: createdAt,
+            vote_side: voteSideData?.[0] ? Number(voteSideData[0]) : 0,
+            back_count: backCountData?.[0] ? Number(backCountData[0]) : 0,
+          }
         }
       }
 

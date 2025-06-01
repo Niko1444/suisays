@@ -57,8 +57,8 @@ export const useSuiSays = () => {
 
       try {
         // 1. Get real post IDs (not fake ones)
-        const postIds = await SuiSaysContract.getAllPostIds()
-        console.log('📋 Real post IDs from contract:', postIds)
+        const postIds = Array.from({ length: 30 }, (_, i) => (i + 1).toString())
+        console.log('📋 Generated post IDs:', postIds)
 
         if (postIds.length > 0) {
           // 2. Fetch the raw SuiPost data
@@ -68,6 +68,10 @@ export const useSuiSays = () => {
           // 3. Convert to your Post interface
           const postsData = suiPosts.map(convertSuiPostToPost)
           console.log('📊 Converted posts data:', postsData)
+
+          // 3.5. Sort by ID (highest to lowest = newest first)
+          postsData.sort((a, b) => parseInt(b.id) - parseInt(a.id))
+          console.log('📊 Sorted posts data (newest first):', postsData)
 
           // 4. Check final state
           setPosts(postsData)

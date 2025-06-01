@@ -21,21 +21,23 @@ class SuiBlinksExtension {
   }
 
   async loadCachedData() {
-    try {
-      const cached = await chrome.storage.local.get([
-        "voteData",
-        "walletAddress",
-      ]);
-      if (cached.voteData) {
-        this.voteData = new Map(Object.entries(cached.voteData));
-      }
-      if (cached.walletAddress) {
-        this.walletAddress = cached.walletAddress;
-        this.isWalletConnected = true;
-      }
-    } catch (error) {
-      console.error("Error loading cached data:", error);
-    }
+    // Mock data for testing
+    const cached = {
+      voteData: {
+        tweet_1929102342151897410: {
+          agree: 521,
+          disagree: 232,
+          donations: 15.7,
+          userVote: "agree",
+        },
+      },
+      walletAddress:
+        "0xde96ac07b26aa9688644077174a30b98b3487a35032af0df999bd892a1fb4f12",
+    };
+
+    this.voteData = new Map(Object.entries(cached.voteData));
+    this.walletAddress = cached.walletAddress;
+    this.isWalletConnected = true;
   }
 
   async saveCachedData() {
@@ -366,7 +368,7 @@ class SuiBlinksExtension {
     }
 
     const button = event.target;
-    const input = button.parentElement.querySelector(".sui-donation-input");
+    const input = button.parentElement.querySelector(".suisays-donation-input");
     const amount = parseFloat(input.value);
 
     if (!amount || amount <= 0) {

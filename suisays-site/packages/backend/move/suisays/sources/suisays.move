@@ -7,12 +7,13 @@ module suisays::suisays {
     // Error codes
     const EInvalidVoteType: u64 = 501;
     const EPostNotFound: u64 = 502;
+    const ECommentNotFound: u64 = 503;
 
     // Vote types
     const VOTE_AGREE: u8 = 1;
     const VOTE_DISAGREE: u8 = 2;
 
-    public struct SuiSaysRegistry has key {
+    public struct SuiSaysRegistry has key, store {
         id: UID,
         posts: Table<String, SuiSaysPost>,
         post_count: u64,
@@ -26,6 +27,17 @@ module suisays::suisays {
         disagree_count: u64,
         total_donations: u64,
         voters: Table<address, u8>,
+        comment_count: u64,
+        comments: Table<String, SuiSaysComment>,
+    }
+
+    public struct SuiSaysComment has store {
+        content: String,
+        author: address,
+        created_at: u64,
+        vote_side: u8, // VOTE_AGREE or VOTE_DISAGREE
+        back_count: u64,
+        backers: Table<address, bool>,
     }
 
     // Initialize the registry
@@ -77,12 +89,61 @@ module suisays::suisays {
             disagree_count: 0,
             total_donations: 0,
             voters: table::new(ctx),
+            comment_count: 0,
+            comments: table::new(ctx),
         };
         
         table::add(&mut registry.posts, post_id, post);
     }
 
-    // Vote on a post (free voting)
+    public entry fun add_comment(
+        registry: &mut SuiSaysRegistry,
+        post_id: String,
+        content: String,
+        vote_side: u8,
+        ctx: &mut TxContext
+    ) {
+        let sender = tx_context::sender(ctx);
+        assert!(vote_side == VOTE_AGREE || vote_side == VOTE_DISAGREE, EInvalidVoteType);
+        assert!(table::contains(&registry.posts, post_id), EPostNotFound);
+        
+        let post = table::borrow_mut(&mut registry.posts, post_id);
+        post.comment_count = post.comment_count + 1;
+        let comment_id = u64_to_string(post.comment_count);
+        
+        let comment = SuiSaysComment {
+            content,
+            author: sender,
+            created_at: tx_context::epoch_timestamp_ms(ctx),
+            vote_side,
+            back_count: 0,
+            backers: table::new(ctx),
+        };
+        
+        table::add(&mut post.comments, comment_id, comment);
+    }
+
+    public entry fun back_comment(
+        registry: &mut SuiSaysRegistry,
+        post_id: String,
+        comment_id: String,
+        ctx: &mut TxContext
+    ) {
+        let sender = tx_context::sender(ctx);
+        assert!(table::contains(&registry.posts, post_id), EPostNotFound);
+        
+        let post = table::borrow_mut(&mut registry.posts, post_id);
+        assert!(table::contains(&post.comments, comment_id), ECommentNotFound);
+        
+        let comment = table::borrow_mut(&mut post.comments, comment_id);
+        
+        if (!table::contains(&comment.backers, sender)) {
+            table::add(&mut comment.backers, sender, true);
+            comment.back_count = comment.back_count + 1;
+        };
+    }
+
+    // Vote on a post
     public entry fun vote(
         registry: &mut SuiSaysRegistry,
         post_id: String,
@@ -198,6 +259,47 @@ module suisays::suisays {
                 };
             };
             i = i + 1;
+        };
+        result
+    }
+
+    public fun get_comment(
+        registry: &SuiSaysRegistry,
+        post_id: String,
+        comment_id: String
+    ): (String, address, u64, u8, u64) {
+        if (!table::contains(&registry.posts, post_id)) {
+            return (std::string::utf8(b""), @0x0, 0, 0, 0)
+        };
+        let post = table::borrow(&registry.posts, post_id);
+        if (!table::contains(&post.comments, comment_id)) {
+            return (std::string::utf8(b""), @0x0, 0, 0, 0)
+        };
+        let comment = table::borrow(&post.comments, comment_id);
+        (comment.content, comment.author, comment.created_at, comment.vote_side, comment.back_count)
+    }
+
+    public fun get_recent_comments(
+        registry: &SuiSaysRegistry,
+        post_id: String,
+        limit: u64
+    ): vector<String> {
+        let mut result = vector::empty<String>();
+        if (!table::contains(&registry.posts, post_id)) {
+            return result
+        };
+        
+        let post = table::borrow(&registry.posts, post_id);
+        let mut i = post.comment_count;
+        let mut count = 0;
+        
+        while (i > 0 && count < limit) {
+            let comment_id = u64_to_string(i);
+            if (table::contains(&post.comments, comment_id)) {
+                vector::push_back(&mut result, comment_id);
+                count = count + 1;
+            };
+            i = i - 1;
         };
         result
     }

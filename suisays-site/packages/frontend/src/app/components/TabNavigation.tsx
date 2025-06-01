@@ -22,7 +22,7 @@ export const TabNavigation = ({
             : 'border-transparent text-gray-500'
         }`}
       >
-        Trending Today
+        All Recent
       </button>
       <button
         onClick={() => onTabChange('foryou')}
@@ -32,7 +32,7 @@ export const TabNavigation = ({
             : 'border-transparent text-gray-500'
         }`}
       >
-        For You
+        Your Feed
       </button>
     </div>
   )

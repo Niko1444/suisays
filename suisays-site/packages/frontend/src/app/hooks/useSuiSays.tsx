@@ -57,24 +57,18 @@ export const useSuiSays = () => {
   // Load posts from the blockchain
   const loadPosts = useCallback(
     async (type: 'recent' | 'trending' = 'recent') => {
-      console.log('🚀 loadPosts called with type:', type)
       setLoading(true)
       setError(null)
 
       try {
         // Generate post IDs from 1 to 20
-        console.log('📍 Generating post IDs 1-20...')
         const postIds = Array.from({ length: 20 }, (_, i) => (i + 1).toString())
-        console.log('✅ Generated post IDs:', postIds)
 
         // Use the batch getPosts function to fetch all posts
         if (postIds.length > 0) {
-          console.log('📍 Fetching posts data using batch function...')
           const suiPosts = await SuiSaysContract.getPosts(postIds)
-          console.log('✅ Got sui posts:', suiPosts.length)
 
           const postsData = suiPosts.map(convertSuiPostToPost)
-          console.log('✅ Converted to UI posts:', postsData.length)
 
           // Sort by ID (descending for newest first)
           postsData.sort((a, b) => parseInt(b.id) - parseInt(a.id))
@@ -151,6 +145,8 @@ export const useSuiSays = () => {
         return false
       }
 
+      console.log(`🗳️ Voting ${voteType} on post ${postId}`)
+
       try {
         const transactionBlock = await SuiSaysContract.voteTransaction(
           postId,
@@ -164,30 +160,31 @@ export const useSuiSays = () => {
               chain: 'sui:testnet',
             },
             {
-              onSuccess: (result) => {
-                console.log('Vote submitted successfully:', result)
+              onSuccess: async (result) => {
+                console.log('✅ Vote submitted successfully:', result)
 
-                // Update local state optimistically
-                setPosts((prevPosts) =>
-                  prevPosts.map((post) => {
-                    if (post.id === postId) {
-                      if (voteType === 'agree') {
-                        return { ...post, agreeCount: post.agreeCount + 1 }
-                      } else {
-                        return {
-                          ...post,
-                          disagreeCount: post.disagreeCount + 1,
-                        }
-                      }
-                    }
-                    return post
-                  })
-                )
+                // FIXED: Instead of optimistic update, fetch fresh data from blockchain
+                try {
+                  console.log('🔄 Refreshing post data after vote...')
+
+                  // Wait a bit for the transaction to be processed
+                  await new Promise((resolve) => setTimeout(resolve, 1000))
+
+                  // Reload all posts to get fresh data
+                  await loadPosts()
+
+                  console.log('✅ Post data refreshed after vote')
+                } catch (refreshError) {
+                  console.error(
+                    '❌ Error refreshing data after vote:',
+                    refreshError
+                  )
+                }
 
                 resolve(true)
               },
               onError: (error) => {
-                console.error('Error voting:', error)
+                console.error('❌ Error voting:', error)
                 setError('Failed to submit vote')
                 resolve(false)
               },
@@ -195,12 +192,12 @@ export const useSuiSays = () => {
           )
         })
       } catch (err) {
-        console.error('Error voting:', err)
+        console.error('❌ Error voting:', err)
         setError('Failed to submit vote')
         return false
       }
     },
-    [currentAccount, signAndExecuteTransaction]
+    [currentAccount, signAndExecuteTransaction, loadPosts]
   )
 
   // Donate to a post

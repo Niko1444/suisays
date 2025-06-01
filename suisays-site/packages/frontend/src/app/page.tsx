@@ -108,7 +108,7 @@ export default function SuisaysApp() {
   )
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-gray-100 p-4">
+    <div className="fixed inset-0 flex items-center justify-center bg-[#F1FDF5] p-4">
       <div className="flex h-[80vh] max-w-md flex-col overflow-hidden rounded-3xl border border-gray-200 bg-gray-50 shadow-xl">
         <StatusBar />
 

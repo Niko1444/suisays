@@ -1,4 +1,3 @@
-// You'll also need to update your Header component to show wallet status
 // components/Header.tsx (updated)
 'use client'
 
@@ -19,13 +18,15 @@ export const Header = ({
   isConnected = false,
   userAddress,
 }: HeaderProps) => {
+  const currentDate = new Date().toLocaleDateString()
+
   return (
     <div className="px-4 py-4">
-      {/* Greeting */}
+      {/* Date */}
       <div className="mb-4 flex items-center justify-between">
         <div>
           <h1 className="text-md pr-24 font-bold text-gray-900">
-            suisays welcome~
+            {currentDate}
           </h1>
           <p className="text-base text-[#6EE7B7]">
             {isConnected && userAddress

@@ -24,15 +24,10 @@ export const PostsList = ({
       post?.author ===
       '0x0000000000000000000000000000000000000000000000000000000000000000'
     ) {
-      console.log('Filtered out post from zero address:', post.id)
       return false
     }
     return true
   })
-
-  console.log(
-    `Filtered posts: ${posts.length} → ${filteredPosts.length} posts (removed zero address posts)`
-  )
 
   if (filteredPosts.length === 0) {
     return (

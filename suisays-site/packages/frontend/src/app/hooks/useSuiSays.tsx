@@ -27,31 +27,26 @@ export const useSuiSays = () => {
 
   // Helper function to convert SuiPost to Post
   const convertSuiPostToPost = (suiPost: SuiPost): Post => {
-    // Generate a random username based on address
-    const generateUsername = (address: string) => {
-      const usernames = [
-        'crypto.wizard',
-        'defi.master',
-        'sui.explorer',
-        'blockchain.dev',
-        'web3.builder',
-      ]
-      const hash = address.slice(-1)
-      const index = parseInt(hash, 16) % usernames.length
-      return usernames[index]
+    // Generate a username from the author address
+    const generateUsername = (address: string): string => {
+      // Simple username generation logic
+      return address.slice(0, 6) + '...' + address.slice(-4)
     }
 
-    return {
+    const converted = {
       id: suiPost.id,
       content: suiPost.content,
       author: suiPost.author,
       authorName: generateUsername(suiPost.author),
-      agreeCount: suiPost.agree_count,
-      disagreeCount: suiPost.disagree_count,
+      agreeCount: suiPost.agree_count, // ← Should be 1
+      disagreeCount: suiPost.disagree_count, // ← Should be 0
       totalDonations: suiPost.total_donations,
       createdAt: suiPost.created_at,
       commentCount: 0, // TODO: Fetch comment count
     }
+
+    console.log('✅ Converted Post:', converted)
+    return converted
   }
 
   // Load posts from the blockchain
@@ -61,21 +56,23 @@ export const useSuiSays = () => {
       setError(null)
 
       try {
-        // Generate post IDs from 1 to 20
-        const postIds = Array.from({ length: 20 }, (_, i) => (i + 1).toString())
+        // 1. Get real post IDs (not fake ones)
+        const postIds = await SuiSaysContract.getAllPostIds()
+        console.log('📋 Real post IDs from contract:', postIds)
 
-        // Use the batch getPosts function to fetch all posts
         if (postIds.length > 0) {
+          // 2. Fetch the raw SuiPost data
           const suiPosts = await SuiSaysContract.getPosts(postIds)
+          console.log('📊 Raw SuiPosts from contract:', suiPosts)
 
+          // 3. Convert to your Post interface
           const postsData = suiPosts.map(convertSuiPostToPost)
+          console.log('📊 Converted posts data:', postsData)
 
-          // Sort by ID (descending for newest first)
-          postsData.sort((a, b) => parseInt(b.id) - parseInt(a.id))
-
+          // 4. Check final state
           setPosts(postsData)
+          console.log('📊 Final posts state:', postsData)
         } else {
-          console.log('⚠️ No post IDs generated')
           setPosts([])
         }
       } catch (err) {

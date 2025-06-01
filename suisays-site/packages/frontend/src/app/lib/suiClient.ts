@@ -180,6 +180,25 @@ export class SuiSaysContract {
 
   // Get a single post using the smart contract function
   static async getPost(postId: string): Promise<SuiPost | null> {
+    const parseU64 = (data: any): number => {
+      if (!data || !data[0]) return 0
+
+      if (typeof data[0] === 'number') return data[0]
+      if (typeof data[0] === 'string') return parseInt(data[0], 10)
+
+      // Handle BCS byte array for u64
+      if (Array.isArray(data[0])) {
+        const bytes = new Uint8Array(data[0])
+        let result = 0
+        for (let i = 0; i < Math.min(8, bytes.length); i++) {
+          result += bytes[i] * Math.pow(256, i)
+        }
+        return result
+      }
+
+      return 0
+    }
+
     try {
       const tx = new Transaction()
       tx.moveCall({
@@ -193,11 +212,14 @@ export class SuiSaysContract {
         transactionBlock: tx,
       })
 
+      // In your getPost method, add this right after you get the returnValues:
+
       if (result.results?.[0]?.returnValues) {
         const returnValues = result.results[0].returnValues
 
-        // The get_post function returns: (String, address, u64, u64, u64, u64)
-        // Which corresponds to: (content, author, agree_count, disagree_count, total_donations, created_at)
+        // ADD THESE DEBUG LOGS HERE:
+        console.log('🔍 Raw return values for post', postId, ':', returnValues)
+        console.log('📊 Return values length:', returnValues.length)
 
         if (returnValues.length >= 6) {
           const [
@@ -208,6 +230,12 @@ export class SuiSaysContract {
             donationsData,
             createdAtData,
           ] = returnValues
+
+          // ADD MORE DEBUG LOGS HERE:
+          console.log('📊 Raw agree count data:', agreeCountData)
+          console.log('📊 Raw disagree count data:', disagreeCountData)
+          console.log('📊 Parsed agree_count:', parseU64(agreeCountData))
+          console.log('📊 Parsed disagree_count:', parseU64(disagreeCountData))
 
           // Parse content (String)
           let content = ''
@@ -250,11 +278,9 @@ export class SuiSaysContract {
             content,
             author,
             created_at: createdAt,
-            agree_count: agreeCountData?.[0] ? Number(agreeCountData[0]) : 0,
-            disagree_count: disagreeCountData?.[0]
-              ? Number(disagreeCountData[0])
-              : 0,
-            total_donations: donationsData?.[0] ? Number(donationsData[0]) : 0,
+            agree_count: parseU64(agreeCountData),
+            disagree_count: parseU64(disagreeCountData),
+            total_donations: parseU64(donationsData),
           }
         }
       }

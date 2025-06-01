@@ -3,10 +3,11 @@
 
 import React, { useState } from 'react'
 import { MessageCircle, ThumbsUp, ThumbsDown, DollarSign } from 'lucide-react'
-import { SuiPost, formatSUI, getRelativeTime } from '../lib/suiClient'
+import { Post } from '../hooks/useSuiSays' // ← Import the Post interface
+import { formatSUI, getRelativeTime } from '../lib/suiClient'
 
 interface PostCardProps {
-  post: SuiPost
+  post: Post // ← Change from SuiPost to Post
   onVote: (postId: string, voteType: 'agree' | 'disagree') => void
   onComment: (postId: string) => void
   onDonate: (postId: string) => void
@@ -52,10 +53,10 @@ export const PostCard = ({
   const [copySuccess, setCopySuccess] = useState(false)
 
   // Safe parsing of numeric values
-  const agreeCount = isNaN(post.agree_count) ? 0 : post.agree_count
-  const disagreeCount = isNaN(post.disagree_count) ? 0 : post.disagree_count
-  const totalDonations = isNaN(post.total_donations) ? 0 : post.total_donations
-  const createdAt = isNaN(post.created_at) ? Date.now() : post.created_at
+  const agreeCount = isNaN(post.agreeCount) ? 0 : post.agreeCount // ← NEW
+  const disagreeCount = isNaN(post.disagreeCount) ? 0 : post.disagreeCount // ← NEW
+  const totalDonations = isNaN(post.totalDonations) ? 0 : post.totalDonations // ← NEW
+  const createdAt = isNaN(post.createdAt) ? Date.now() : post.createdAt // ← NEW
 
   const handleVote = (voteType: 'agree' | 'disagree') => {
     setSelectedVote(voteType)
